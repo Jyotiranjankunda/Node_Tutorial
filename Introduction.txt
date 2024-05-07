@@ -1,0 +1,17 @@
+Initially, JS was used in frontend only to enhance UI and interaction on website. (i.e, Button, dynamic color, popup).
+
+But node js is : open source, server side js
+It is a runtime that allow to run js code in the server.
+
+Node js allows developer to use same language in frontend and backend, i.e, client side and server side.
+
+Node js is built on top of chrome v8 js enginge, which is known for high performance and efficient execution of js code.
+
+V8 engine -> open source Javascript engine -> developed by google -> to use in the google chrome web browser.
+
+Human readable JS Code -> v8 converts to -> machine readable language
+
+JS source code -> chrome v8 engine -> (parsing -> AST (Abstract syntax tree) -> Byte code -> machine code -> code runs on the cpu)
+
+Clien side (request) <=> (response) server side
+

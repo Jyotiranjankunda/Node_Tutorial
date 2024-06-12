@@ -98,6 +98,7 @@ const express = require('express');
 const app = express(); // server is created as the name of app
 const db = require('./db');
 require('dotenv').config();
+const passport = require('./auth');
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.json()); // store the json data in req.body
@@ -110,7 +111,24 @@ const PORT = process.env.PORT || 3000;
 
 // db();
 
-app.get('/', function (req, res) {
+// Middleware function
+const logRequest = (req, res, next) => {
+  console.log(`[${new Date().toLocaleString()}] Request made to : ${req.originalUrl}`);
+  next(); // Move on to the next phase
+
+  // If we don't write the next function, then the request will not go to response, if will get stuck in the middleware.
+};
+
+app.use(logRequest); // This way we can apply this middleware to every route that we have defined.
+
+// If we want to apply it on any particular route, then we can do it like this:
+// app.use('/menu', logRequest, menuRoutes);
+// or, app.get('/', logRequest, function (req, res) {});
+
+app.use(passport.initialize());
+const localAuthMidlleware = passport.authenticate('local', {session: false});
+
+app.get('/', localAuthMidlleware, function (req, res) {
   res.send('Welcome to our hotel');
 });
 
@@ -132,45 +150,45 @@ app.get('/idli', (req, res) => {
 });
 
 // app.post('/person', async (req, res) => {
-  // const data = req.body;
-  // Assuming the request body contains the person data
-  // client ne data bheja, body-parser ne usko process krke req.body me save kr diya, jisko ki ham js object ke taur pe use kr skte hai
+// const data = req.body;
+// Assuming the request body contains the person data
+// client ne data bheja, body-parser ne usko process krke req.body me save kr diya, jisko ki ham js object ke taur pe use kr skte hai
 
-  // Create a new Person document(row) using the mongoose model
+// Create a new Person document(row) using the mongoose model
 
-  // const newPerson = new Person();
+// const newPerson = new Person();
 
-  // We can assign all properties on by one
-  // newPerson.name = data.name;
-  // newPerson.age = data.age;
-  // newPerson.mobile = data.mobile;
-  // newPerson.email = data.email;
+// We can assign all properties on by one
+// newPerson.name = data.name;
+// newPerson.age = data.age;
+// newPerson.mobile = data.mobile;
+// newPerson.email = data.email;
 
-  // Else, we can pass the data as a parameter to Person schema, it will automatically create a document based on data.
-  // const newPerson = new Person(data);
+// Else, we can pass the data as a parameter to Person schema, it will automatically create a document based on data.
+// const newPerson = new Person(data);
 
-  // Save the new person to the database.
+// Save the new person to the database.
 
-  // newPerson.save((error, person) => {
-  //   if(error){
-  //     console.log("Error saving person : ", error);
-  //     res.status(500).json({error: "Internal server error"});
-  //   }
-  //   else{
-  //     console.log('Data saved successfully');
-  //     res.status(200).json(person);
-  //   }
-  // })
+// newPerson.save((error, person) => {
+//   if(error){
+//     console.log("Error saving person : ", error);
+//     res.status(500).json({error: "Internal server error"});
+//   }
+//   else{
+//     console.log('Data saved successfully');
+//     res.status(200).json(person);
+//   }
+// })
 
-  // Now a days no one uses callback like this in the post method. They look quite complex.
+// Now a days no one uses callback like this in the post method. They look quite complex.
 
-  // Async & await are used for asynchronous code, such as n/w requests, file system operations or database queries, rather than callbacks.
+// Async & await are used for asynchronous code, such as n/w requests, file system operations or database queries, rather than callbacks.
 
-  // Using try and catch block.
+// Using try and catch block.
 
-  // The try block contains the code for creating a new Person document and saving it to the database using await newPerson.save()
+// The try block contains the code for creating a new Person document and saving it to the database using await newPerson.save()
 
-  // If an error occurs during any step, it is caught in the 'catch' block, and an error response is sent with a 500 internal server error status.
+// If an error occurs during any step, it is caught in the 'catch' block, and an error response is sent with a 500 internal server error status.
 // });
 
 /*
@@ -217,7 +235,7 @@ Await :-
 // app.get('/person/:workType', async (req, res) => {
 //   try {
 //     const workType = req.params.workType;  // Extract the work type from the URL parameter
-  
+
 //     if(workType == 'chef' || workType == 'manager' || workType == 'waiter'){
 //       const response = await Person.find({work: workType});
 //       res.status(200).json(response);
@@ -250,7 +268,7 @@ Various status codes:
 //     const data = req.body;
 //     const menuItem = new MenuItem(data);
 //     const response = await menuItem.save();
-    
+
 //     console.log("Menu saved successfully");
 //     res.status(200).send(response);
 //   }
@@ -276,5 +294,5 @@ const menuRoutes = require('./routes/menuRoutes');
 app.use('/menu', menuRoutes);
 
 app.listen(PORT, () => {
-  console.log("Listening on port 3000");
+  console.log('Listening on port 3000');
 }); // 3000 is the port no.

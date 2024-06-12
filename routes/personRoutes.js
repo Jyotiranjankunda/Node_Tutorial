@@ -15,21 +15,88 @@ const express = require('express');
 const router = express.Router();
 
 const Person = require('../models/Person');
+const {jwtAuthMiddleware, generateToken} = require('../jwt');
 
-router.post('/', async (req, res) => {
+router.post('/signup', async (req, res) => {
   try {
-    const data = req.body;
+    const data = req.body; // request body contains the person data
+
+    // create a new person document using the mongoose model
     const newPerson = new Person(data);
+    
+    // save the new person to the database.
     const response = await newPerson.save();
     console.log('Data saved');
-    res.status(200).json(response);
+
+    // We can create payload using any field of the person data, as we wish
+    const payload = {
+      id: response.id,  // The _id provided by mongodb is accessed using only id and not _id
+      username: response.username
+    }
+ 
+    const token = generateToken(payload);
+    console.log("Token is : ", token);
+
+    // token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2M2VkY2FiZmQ0OWJkYWQ4ZDM4ZmJlYyIsInVzZXJuYW1lIjoiSnlvdGkxMjMiLCJpYXQiOjE3MTUzOTU3NTV9.sK75wKf5Zf6DjC_MSAGl1l9EPNQu3epQXzaZlSfnw5U"
+
+    // Token will be in this form : header.payload.signature
+
+    res.status(200).json({response: response, token: token});
   } catch (error) {
-    console.log('Error', error);
+    console.log('Errfor', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.get('/', async (req, res) => {
+router.post('/login', async(req, res) => {
+  try {
+    // Extract username and password from request body
+    const {username, password} = req.body;
+
+    // Find the user by username in the database.
+    const user = await Person.findOne({username: username});
+
+    // If user doesn't exist or password doesn't match, then return error
+    if(!user || !(await user.comparePassword(password))){
+      return res.status(401).json({error: 'Invalid username or password'});
+    }
+
+    // Generate token
+    const payload = {
+      id: user.id,
+      username: user.username
+    }
+
+    const token = generateToken(payload);
+    
+    // return token as response
+    return res.json(token);
+  } catch (error) {
+    
+  }
+});
+
+// Profile route
+router.get('/profile', jwtAuthMiddleware, async (req, res) => {
+  try {
+    const userData = req.user;  // In the jwt.js file, we are attaching the user information to the request object, i.e, req.user = decoded.
+
+    console.log("User data : ", userData);
+
+    // now userData contains the object that we are sending as a payload. Here, we are sending the _id and username as a payload. So, we can extract the _id from it, and find the user from the database using the id.
+
+    const userId = userData.id;
+    const user = await Person.findById(userId);
+
+    res.status(200).json({user});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({error: "Internal server error"});
+  }
+});
+
+// Get method to get all the persons
+router.get('/', jwtAuthMiddleware, async (req, res) => {
   try {
     const data = await Person.find();
     console.log('Data fetched');

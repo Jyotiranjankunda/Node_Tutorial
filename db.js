@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 require('dotenv').config(); 
 
 // // Define the mongoDB connection url
-// const mongoUrl = process.env.MONGODB_URL_LOCAL;
-const mongoUrl = process.env.MONGODB_URL;
+const mongoUrl = process.env.MONGODB_URL_LOCAL;
+// const mongoUrl = process.env.MONGODB_URL;
 
 // Set up mongodb connection
 mongoose.connect(mongoUrl, {
